@@ -1,23 +1,17 @@
-//required packages
-var  express = require('express'),
+var express = require('express'),
      exphbs = require('express-handlebars'),
      // logger = require('morgan'),
      mongoose = require('mongoose'),
      axios = require('axios'),
      cheerio = require('cheerio'),
-     PORT = 3000;
-
-
 
 // Require all models
-     // db = require('./models'),
+     db = require('./models'),
+
+     PORT = 3000;
 
 // Initialize Express
 var app = express();
-
-//mongodb connection
-mongoose.connect("mongodb://localhost/MongoScraper", {useNewUrlParser:true});
-
 
 // Configure middleware
 // Parse request body as JSON
@@ -27,12 +21,49 @@ app.use(express.json());
 app.engine("handlebars", exphbs({ defaultLayout: "main" }));
 app.set("view engine", "handlebars");
 
+
+// Connect to the Mongo DB with sample database
+mongoose.connect("mongodb://localhost/unit19", { useNewUrlParser: true });
+
+
 // Make public a static folder
 app.use(express.static("public"));
 
-app.get("/", (request, response) => {
-     response.render("index");
-});
+
+// A GET route for scraping the echoJS website
+app.get("/scrape", function(req, res) {
+     // First, we grab the body of the html with axios
+     axios.get("https://thoughtcatalog.com/category/self-improvement/").then(function(response) {
+       // Then, we load that into cheerio and save it to $ for a shorthand selector
+       var $ = cheerio.load(response.data);
+   
+       // Now, we grab every h2 within an article tag, and do the following:
+       $("article h1").each(function(i, element) {
+
+          var result = {};
+
+          result.headline = $(this).text().trim();
+          result.url = $(this).children("a").attr("href");
+  
+
+          // Create a new Article using the `result` object built from scraping
+      db.Article.create(result)
+      .then(function(dbArticle) {
+        // View the added result in the console
+        console.log(dbArticle);
+      })
+      .catch(function(err) {
+        // If an error occurred, log it
+        console.log(err);
+      });
+
+      
+      });
+       // Send a message to the client
+       res.send("Scrape Complete");
+     });
+   });
+   
 
 
 // Start the server
