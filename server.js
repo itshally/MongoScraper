@@ -1,6 +1,6 @@
 var express = require('express'),
      exphbs = require('express-handlebars'),
-     // logger = require('morgan'),
+     logger = require('morgan'),
      mongoose = require('mongoose'),
      axios = require('axios'),
      cheerio = require('cheerio'),
@@ -13,22 +13,39 @@ var express = require('express'),
 // Initialize Express
 var app = express();
 
+// Use morgan logger for logging requests
+app.use(logger("dev"));
+
+// Make public a static folder
+app.use(express.static("public"));
+
 // Configure middleware
 // Parse request body as JSON
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false  }));
 app.use(express.json());
 
 app.engine("handlebars", exphbs({ defaultLayout: "main" }));
 app.set("view engine", "handlebars");
 
 
-// Connect to the Mongo DB with sample database
-mongoose.connect("mongodb://localhost/unit19", { useNewUrlParser: true });
+
+if (process.env.MONGODB_URI) {
+	mongoose.connect(process.env.MONGODB_URI);
+}
+else {
+	// Connect to the Mongo DB with sample database
+     mongoose.connect("mongodb://localhost/unit19", { useNewUrlParser: true });
+
+};
 
 
-// Make public a static folder
-app.use(express.static("public"));
+// app.use(express.static(path.join(__dirname, '/app/public')));
 
+app.get('/', (request, response) => {
+    db.Article.find({}, (err, data) =>{
+     response.render("index", {articles: data});
+    })
+});
 
 // A GET route for scraping the echoJS website
 app.get("/scrape", function(req, res) {
@@ -44,7 +61,6 @@ app.get("/scrape", function(req, res) {
 
           result.headline = $(this).text().trim();
           result.url = $(this).children("a").attr("href");
-  
 
           // Create a new Article using the `result` object built from scraping
       db.Article.create(result)
@@ -60,9 +76,24 @@ app.get("/scrape", function(req, res) {
       
       });
        // Send a message to the client
-       res.send("Scrape Complete");
+     //   res.send("Scrape Complete");
      });
    });
+   
+
+// Route for getting all Articles from the db
+app.get("/articles", function(req, res) {
+     // Grab every document in the Articles collection
+     db.Article.find({})
+     .then(function(dbArticle) {
+     // If we were able to successfully find Articles, send them back to the client
+     res.json(dbArticle);
+     })
+     .catch(function(err) {
+     // If an error occurred, send it to the client
+     res.json(err);
+     });
+});
    
 
 

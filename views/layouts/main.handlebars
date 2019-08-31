@@ -19,15 +19,22 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                <div class="navbar-nav">
-                    <a class="nav-item nav-link active" href="/">View All</a>
+                    <a class="nav-item nav-link" href="/">View All</a>
                     <a class="nav-item nav-link" href="/saved">Saved Articles</a>
-                    <a class="nav-item nav-link" href="#">Scrape Articles</a>
+                    {{!-- <form action="/scrape" method="GET"> --}}
+                         <input class="btn btn-outline-info my-2 my-sm-0" type="button" id="scrape-article" value="Scrape Article">"
+                    {{!-- </form> --}}
                </div>
           </div>
      </nav>
 
-     <!-- articles will appear below this line -->
-     {{body}}
+     <div class="container">
+          <div id="articles">
+
+               {{{body}}}
+
+          </div>
+     </div>
 
      <!-- boostrap js -->
      <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
@@ -36,5 +43,9 @@
 
      <!-- jQuery CDN -->
      <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+
+     <!-- custom JS -->
+     <script src="../app.js"></script>
+     
 </body>
 </html>
