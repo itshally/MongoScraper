@@ -34,7 +34,7 @@ if (process.env.MONGODB_URI) {
 }
 else {
 	// Connect to the Mongo DB with sample database
-     mongoose.connect("mongodb://localhost/unit19", { useNewUrlParser: true });
+     mongoose.connect("mongodb://localhost/MongoScraperDB", { useNewUrlParser: true });
 
 };
 
