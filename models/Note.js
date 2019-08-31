@@ -1,19 +1,13 @@
-var mongoose = require('mongoose');
+const mongoose = require("mongoose");
+	 Schema = mongoose.Schema;
 
-var Schema = mongoose.Schema;
-
-//creating note schema
-var NoteSchema = new Schema({
-     title : {
-          type : String,
-          required : true
-     },
-     body : String
+//creating a schema for notes
+const NoteSchema = new Schema({
+  body : {
+	type: String,
+	required : true
+  }
 });
 
-//creating a note model
-var Note = mongoose.model("Note", NoteSchema);
-
-//exporting model...
+const Note = mongoose.model('Note', NoteSchema);
 module.exports = Note;
-

@@ -1,104 +1,133 @@
-var express = require('express'),
+//required packages
+var  express = require('express'),
      exphbs = require('express-handlebars'),
      logger = require('morgan'),
      mongoose = require('mongoose'),
      axios = require('axios'),
      cheerio = require('cheerio'),
-
-// Require all models
+     request = require('request'),
      db = require('./models'),
-
-     PORT = 3000;
+     port = process.env.PORT || 3000;
 
 // Initialize Express
 var app = express();
 
-// Use morgan logger for logging requests
 app.use(logger("dev"));
-
-// Make public a static folder
 app.use(express.static("public"));
-
-// Configure middleware
-// Parse request body as JSON
 app.use(express.urlencoded({ extended: false  }));
 app.use(express.json());
 
 app.engine("handlebars", exphbs({ defaultLayout: "main" }));
+
 app.set("view engine", "handlebars");
 
-
-
+//processing the database connection
 if (process.env.MONGODB_URI) {
 	mongoose.connect(process.env.MONGODB_URI);
 }
 else {
-	// Connect to the Mongo DB with sample database
-     mongoose.connect("mongodb://localhost/MongoScraperDB", { useNewUrlParser: true });
-
+  mongoose.connect("mongodb://localhost/MongoScraperDB", { useNewUrlParser: true });
 };
 
-
-// app.use(express.static(path.join(__dirname, '/app/public')));
-
+//rendering the home page with the articles
 app.get('/', (request, response) => {
-    db.Article.find({}, (err, data) =>{
-     response.render("index", {articles: data});
-    })
+  db.Article.find({})
+    .then((data) => {
+      let article = {
+        article: data
+      };
+      response.render('index', article);
+    });
 });
 
-// A GET route for scraping the echoJS website
-app.get("/scrape", function(req, res) {
-     // First, we grab the body of the html with axios
-     axios.get("https://thoughtcatalog.com/category/self-improvement/").then(function(response) {
-       // Then, we load that into cheerio and save it to $ for a shorthand selector
-       var $ = cheerio.load(response.data);
-   
-       // Now, we grab every h2 within an article tag, and do the following:
-       $("article h1").each(function(i, element) {
+
+// --------------------------- SCRAPING ARTICLE ---------------------------
+//requesting data to scrape
+app.get('/scrape', (req, res) => {
+     request("https://thoughtcatalog.com/category/self-improvement/", function (err, response, html) {
+       const $ = cheerio.load(html);   
+       $(".tcf-article-md-title").each(function(i, element) {
 
           var result = {};
+          //getting the title 
+          result.title = $(this).find('h1').text().trim();
+          //getting the link
+          result.link = $(this).find("a").attr("href");
 
-          result.headline = $(this).text().trim();
-          result.url = $(this).children("a").attr("href");
-
-          // Create a new Article using the `result` object built from scraping
-      db.Article.create(result)
-      .then(function(dbArticle) {
-        // View the added result in the console
-        console.log(dbArticle);
-      })
-      .catch(function(err) {
-        // If an error occurred, log it
-        console.log(err);
+          //saving the a new data to the database
+          db.Article.create(result).then((data) => {
+            console.log(data);
+          }).catch((error) => { console.log(error); });
       });
+    console.log('Done');
+    res.redirect('/');
+  });
+});
 
-      
-      });
-       // Send a message to the client
-     //   res.send("Scrape Complete");
-     });
-   });
-   
+//getting all scraped data from the database
+app.get ('/articles', (request, response) =>{
+  db.Article.find().sort({_id: -1})
+    .exec((error, document) => {
+        let data = {articles: document};
+        res.render('index', data);
+    });
+});
 
-// Route for getting all Articles from the db
-app.get("/articles", function(req, res) {
-     // Grab every document in the Articles collection
-     db.Article.find({})
-     .then(function(dbArticle) {
-     // If we were able to successfully find Articles, send them back to the client
-     res.json(dbArticle);
-     })
-     .catch(function(err) {
-     // If an error occurred, send it to the client
-     res.json(err);
-     });
+//api page for the articles
+app.get('/api/articles', (request, response) => {
+  db.Article.find({})
+    .then(function(article) {
+      response.json(article);
+    }).catch((error) => { response.json(error); });
+});
+
+//getting scraped data by id from the database
+app.get('/articles/:id', (request, response) => {
+  db.Article.findOne({ _id: request.params.id })
+    .then((article) => {
+      response.json(article);
+    }).catch((error) => { response.json(error); });
 });
    
+//--------------------------- SAVING/UNSAVING ARTICLES ---------------------------
 
+//getting saved articles from the api path
+app.get('/api/saved', (request, response) => {
+  db.Article.find({ saved: true })
+    .then((result) => {
+      response.json(result);
+    }).catch((error) => { response.json(error); });
+});
+
+//getting all saved data to display on the page
+app.get('/saved', (request, response) => {
+  db.Article.find({ saved: true })
+    .then((article) => {
+      const saved = {
+        article: article
+      };
+      response.render('saved', saved);
+    }).catch((error) => { response.json(error); });
+});
+
+//post article by id to save to the api
+app.post('/api/saved/:id', (request, response) => {
+  db.Article.findOneAndUpdate({ _id: request.params.id }, { saved: true })
+    .then((article) => {
+      response.json(article);
+    }).catch((error) => { response.json(error); });
+});
+
+//is used for removing the article from the saved api
+app.post('/api/removed/:id', (request, response) => {
+  db.Article.findOneAndUpdate({ _id: request.params.id }, { saved: false })
+    .then((article) => {
+      response.json(article);
+    }).catch((error) => { response.json(error); });
+});
 
 // Start the server
-app.listen(PORT, function() {
-     console.log("App listening on port " + PORT);
+app.listen(port, function() {
+     console.log("App listening on port " + port);
 });
    
