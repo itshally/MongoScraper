@@ -32,6 +32,8 @@ else {
 //rendering the home page with the articles
 app.get('/', (request, response) => {
   db.Article.find({})
+  .sort({ _id: 1 })
+  .populate('note')
     .then((data) => {
       let article = {
         article: data
@@ -64,15 +66,6 @@ app.get('/scrape', (req, res) => {
   });
 });
 
-//getting all scraped data from the database
-app.get ('/articles', (request, response) =>{
-  db.Article.find().sort({_id: -1})
-    .exec((error, document) => {
-        let data = {articles: document};
-        res.render('index', data);
-    });
-});
-
 //api page for the articles
 app.get('/api/articles', (request, response) => {
   db.Article.find({})
@@ -89,8 +82,8 @@ app.get('/articles/:id', (request, response) => {
     }).catch((error) => { response.json(error); });
 });
    
-//--------------------------- SAVING/UNSAVING ARTICLES ---------------------------
 
+//--------------------------- SAVING/UNSAVING ARTICLES ---------------------------
 //getting saved articles from the api path
 app.get('/api/saved', (request, response) => {
   db.Article.find({ saved: true })
@@ -123,6 +116,42 @@ app.post('/api/removed/:id', (request, response) => {
   db.Article.findOneAndUpdate({ _id: request.params.id }, { saved: false })
     .then((article) => {
       response.json(article);
+    }).catch((error) => { response.json(error); });
+});
+
+
+// --------------------------- NOTES FOR AN ARTICLE ---------------------------
+//getting the notes to display from its API
+app.get('/notes', (request, response) => {
+  db.Note.find({}).then((notes) => {
+    response.json(notes);
+  }).catch((error) => { response.json(error); });
+}); 
+
+//this is where the note's id will be based
+app.get('/articles/:id', (request, response) => {
+  db.Article.findOne({ _id: request.params.id })
+    .populate('note')
+    .then((result) => {
+      response.json(result);
+    }).catch((error) => { response.json(error); });
+});
+
+//posting notes 
+app.post('/notes/:id', (request, response) => {
+  db.Note.create(request.body).then((addNote) => {
+    return db.Article.findOneAndUpdate({ _id : request.params.id },{ $push : { note : addNote._id } },
+      { new : true });
+  }).then((result) => {
+    response.json(result);
+  }).catch((error) => { response.json(error); });
+});
+
+//delete notes
+app.delete('/notes/:id', (request, response) => {
+  db.Note.deleteOne({ _id: request.params.id })
+    .then(function(result) {
+      response.json(result);
     }).catch((error) => { response.json(error); });
 });
 
