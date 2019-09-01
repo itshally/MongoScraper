@@ -1,0 +1,7 @@
+.modal-body{
+     height: 100%;
+}
+.modal-body ul{
+     overflow: auto;
+     height: 50vh;
+}
