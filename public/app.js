@@ -32,29 +32,38 @@ $(() => {
     e.preventDefault();
     var id = $(e.target).attr('id') 
     $('.modal .modal-dialog .modal-title').text('Article ID: ' + id);
-
+    var noteID="";
     $.ajax({
       method: "GET",
       url: `/notes/`
     }).then(function(data) {
-      console.log(data)
       for(var x in data){
-        console.log(data[x].body)
-
         $('.modal .list-group-flush').append(
           `<li class="list-group-item">
             ${data[x].body}
-            <button type="button" class="btn btn-danger m-2 delete-note" id="{{id}}" data-delete="{{_id}}">Delete</button>
+            <button type="button" class="btn btn-danger m-2 delete-note" id="${data[x]._id}" data-delete="${data[x]._id}">Delete</button>
           </li>`
-        );
-        
+        ); 
       }
+
+      //deleting notes
+      $('.modal .delete-note').on('click', (e) => {
+        e.preventDefault();
+        var id = $(e.target).data('delete');
+          $.ajax({
+            method: "DELETE",
+            url: `/notes/${id}`
+          }).then(function() {
+            location.reload();
+          });
+        });
     });
+
+    
   });
 
   //saving notes
   $('.save-note').on('click', (e) => {
-    alert('saved')
     var id = $('h4').attr('id');
     console.log(id)
     let note = $('textarea').val();
@@ -66,6 +75,5 @@ $(() => {
       $('textarea').val('');      
       location.reload();
     });
-
   });
 });
