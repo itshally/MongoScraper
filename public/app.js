@@ -29,18 +29,25 @@ $(() => {
 
   //displays article id on the modal's title
   $('.note-button').on('click', (e) => {
+    e.preventDefault();
     var id = $(e.target).attr('id') 
     $('.modal .modal-dialog .modal-title').text('Article ID: ' + id);
 
     $.ajax({
       method: "GET",
-      url: `/articles/${id}`
+      url: `/notes/`
     }).then(function(data) {
       console.log(data)
-      console.log(data.note)
-      $(".save-note").attr("data", data._id);
-      if (data.note) {
-        $(".list-group-item").text(data.note.body);
+      for(var x in data){
+        console.log(data[x].body)
+
+        $('.modal .list-group-flush').append(
+          `<li class="list-group-item">
+            ${data[x].body}
+            <button type="button" class="btn btn-danger m-2 delete-note" id="{{id}}" data-delete="{{_id}}">Delete</button>
+          </li>`
+        );
+        
       }
     });
   });
@@ -48,7 +55,7 @@ $(() => {
   //saving notes
   $('.save-note').on('click', (e) => {
     alert('saved')
-    var id = $(e.target).attr('data');
+    var id = $('h4').attr('id');
     console.log(id)
     let note = $('textarea').val();
     $.ajax({
@@ -56,12 +63,9 @@ $(() => {
       url: `/notes/${id}`,
       data: { body: note }
     }).then((data) => { 
-      console.log(data)
-      console.log(note)
-      // location.reload(); 
+      $('textarea').val('');      
+      location.reload();
     });
 
-    $('textarea').val('');
-    $("#exampleModal").modal("toggle");
   });
 });

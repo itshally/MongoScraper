@@ -1,14 +1,12 @@
 <ul class="list-group list-group-flush">
     {{#each article}}
         <li class="list-group-item">
-            <h4>{{title}}</h4>
+            <h4 id={{id}}>{{title}}</h4>
             <a href="{{link}}" target="_blank"><button type="button" class="btn btn-outline-dark" id="{{id}}"><i class="fab fa-readme"></i> Read Online</button></a> 
-            <button type="button" class="btn btn-outline-dark note-button" id="{{id}}" data="{{id}}" data-toggle="modal" data-target="#exampleModal" >add</button>
+            <button type="button" class="btn btn-outline-dark note-button" id="{{id}}" data="{{_id}}" data-toggle="modal" data-target="#exampleModal" >add</button>
             <button title="Remove Article"type="button" class="btn btn-outline-dark unsave-button" data="{{id}}"><i class="far fa-trash-alt"></i></button>
         </li>
-    {{/each}}
-</ul>
-
+    
 <!-- modal for the notes -->
 <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
@@ -21,12 +19,7 @@
       </div>
       <div class="modal-body">
         <ul class="list-group list-group-flush">
-            {{#each notes}}
-                <li class="list-group-item">
-                    {{body}}
-                    <button type="button" class="btn btn-danger m-2 delete-note" id="{{id}}" data-delete="{{_id}}">Delete</button>
-                </li>
-            {{/each}}
+          <!-- notes will appear below this comment -->
         </ul><hr>
         <form>
           <div class="form-group">
@@ -42,3 +35,6 @@
     </div>
   </div>
 </div>
+
+{{/each}}
+</ul>

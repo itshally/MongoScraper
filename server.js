@@ -122,7 +122,7 @@ app.post('/api/removed/:id', (request, response) => {
 
 // --------------------------- NOTES FOR AN ARTICLE ---------------------------
 //getting the notes to display from its API
-app.get('/notes', (request, response) => {
+app.get('/notes/', (request, response) => {
   db.Note.find({}).then((notes) => {
     response.json(notes);
   }).catch((error) => { response.json(error); });
@@ -131,10 +131,18 @@ app.get('/notes', (request, response) => {
 //this is where the note's id will be based
 app.get('/articles/:id', (request, response) => {
   db.Article.findOne({ _id: request.params.id })
-    .populate('note')
+    .populate('notes')
     .then((result) => {
       response.json(result);
     }).catch((error) => { response.json(error); });
+});
+
+//displaying notes
+app.get('/notes/:id', (request, response) => {
+  db.Note.findOne({_id: request.params.id})
+  .then((result) => {
+    response.json(result);
+  }).catch((error) => { response.json(error); });
 });
 
 //posting notes 
